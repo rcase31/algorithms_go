@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func Print(heap heap) {
+func Print[T any](heap Heap[T]) {
 	var result strings.Builder
 	level := 0
 	maxLevel := int(math.Log2(float64(len(heap))))
@@ -30,7 +30,7 @@ func Print(heap heap) {
 		// Build the string for the current level
 		line := strings.Repeat(" ", leadingSpaces)
 		for i := startIndex; i < endIndex; i++ {
-			line += fmt.Sprintf("%d", heap[i])
+			line += fmt.Sprintf("%d", heap[i].Key)
 			if i < endIndex-1 {
 				line += strings.Repeat(" ", betweenSpaces)
 			}
