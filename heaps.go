@@ -1,6 +1,7 @@
 package heapsort
 
 import (
+	"fmt"
 	"math"
 )
 
@@ -57,5 +58,75 @@ func MaxHeapify(A heap, index int) {
 		A[largest], A[index] = A[index], A[largest]
 		// mind that largest only represents the index of the newly inserted element, since it is no longer the largest
 		MaxHeapify(A, largest)
+	}
+}
+
+func MinHeapify(A heap, index int) {
+	leftIndex := Left(index)
+	rightIndex := Right(index)
+	heapSize := len(A)
+
+	fmt.Println("before heapify")
+	Print(A)
+
+	smallest := index
+	isUnbalanced := false
+
+	if leftIndex < heapSize && A[leftIndex] < A[index] {
+		smallest = leftIndex
+		isUnbalanced = true
+	}
+
+	if rightIndex < heapSize && A[rightIndex] < A[smallest] {
+		smallest = rightIndex
+		isUnbalanced = true
+	}
+
+	if isUnbalanced {
+		// swap of places
+		A[smallest], A[index] = A[index], A[smallest]
+		// mind that largest only represents the index of the newly inserted element, since it is no longer the largest
+		MinHeapify(A, smallest)
+	}
+
+	fmt.Println("After heapify")
+	Print(A)
+}
+
+// page 167
+// we depart from the upper half of the heap since all bellow are one-sized heaps (leaves)
+func BuildMaxHeap(A []int) {
+	n := len(A)
+	halfwayIndex := math.Floor(float64(n) / 2)
+	for i := halfwayIndex; i >= 0; i-- {
+		MaxHeapify(A, int(i))
+	}
+}
+
+func BuildMinHeap(A []int) {
+	n := len(A)
+	halfwayIndex := math.Floor(float64(n) / 2)
+	for i := halfwayIndex; i >= 0; i-- {
+		MinHeapify(A, int(i))
+	}
+}
+
+// page 170
+func HeapSort(A []int) {
+	BuildMaxHeap(A) // O(n)
+	n := len(A)
+	for i := n - 1; i > 0; i-- { // O(n)
+		A[i], A[0] = A[0], A[i] // A[0] will always be the biggest in reference to the current heapsize
+		last := i
+		MaxHeapify(A[:last], 0) // O(logn)
+	}
+}
+
+// not working
+func heapSortWithMinHeap(A []int) {
+	BuildMinHeap(A)
+	n := len(A)
+	for i := 1; i <= n; i++ {
+		MinHeapify(A[i:], 0)
 	}
 }
