@@ -1,6 +1,7 @@
 package heapsort
 
 import (
+	"errors"
 	"fmt"
 	"math"
 )
@@ -18,22 +19,27 @@ func Right(index int) int {
 	return index*2 + 2
 }
 
-type heap []int
-
-func AssertMaxHeapProperty(A heap, index int) bool {
-	parentIndex := Parent(index)
-	return A[parentIndex] >= A[index]
+type element[T any] struct {
+	key   int
+	value T
 }
 
-func AssertMinHeapProperty(A heap, index int) bool {
+type heap[T any] []element[T]
+
+func AssertMaxHeapProperty[T any](A heap[T], index int) bool {
 	parentIndex := Parent(index)
-	return A[parentIndex] <= A[index]
+	return A[parentIndex].key >= A[index].key
+}
+
+func AssertMinHeapProperty[T any](A heap[T], index int) bool {
+	parentIndex := Parent(index)
+	return A[parentIndex].key <= A[index].key
 }
 
 // page 165
 // index is a new element inserted into the heap
 // we know for sure that tress rooted at left and right are max heaps
-func MaxHeapify(A heap, index int) {
+func MaxHeapify[T any](A heap[T], index int) {
 	leftIndex := Left(index)
 	rightIndex := Right(index)
 	heapSize := len(A)
@@ -43,12 +49,12 @@ func MaxHeapify(A heap, index int) {
 	largest := index
 	isUnbalanced := false
 
-	if leftIndex < heapSize && A[leftIndex] > A[index] {
+	if leftIndex < heapSize && A[leftIndex].key > A[index].key {
 		largest = leftIndex
 		isUnbalanced = true
 	}
 
-	if rightIndex < heapSize && A[rightIndex] > A[largest] {
+	if rightIndex < heapSize && A[rightIndex].key > A[largest].key {
 		largest = rightIndex
 		isUnbalanced = true
 	}
@@ -61,7 +67,7 @@ func MaxHeapify(A heap, index int) {
 	}
 }
 
-func MinHeapify(A heap, index int) {
+func MinHeapify[T any](A heap[T], index int) {
 	leftIndex := Left(index)
 	rightIndex := Right(index)
 	heapSize := len(A)
@@ -72,12 +78,12 @@ func MinHeapify(A heap, index int) {
 	smallest := index
 	isUnbalanced := false
 
-	if leftIndex < heapSize && A[leftIndex] < A[index] {
+	if leftIndex < heapSize && A[leftIndex].key < A[index].key {
 		smallest = leftIndex
 		isUnbalanced = true
 	}
 
-	if rightIndex < heapSize && A[rightIndex] < A[smallest] {
+	if rightIndex < heapSize && A[rightIndex].key < A[smallest].key {
 		smallest = rightIndex
 		isUnbalanced = true
 	}
@@ -129,4 +135,56 @@ func heapSortWithMinHeap(A []int) {
 	for i := 1; i <= n; i++ {
 		MinHeapify(A[i:], 0)
 	}
+}
+
+var ErrHeapUnderflow = errors.New("heap underflow")
+
+func MaxHeapMaximum(A heap) (int, error) {
+	if A == nil {
+		return 0, ErrHeapUnderflow
+	}
+	return A[0], nil
+}
+
+func MaxHeapExtractMax(A *heap) (int, error) {
+	maximum, err := MaxHeapMaximum(*A)
+	if err != nil {
+		return 0, err
+	}
+	lastIndex := len(*A) - 1
+	(*A)[0] = (*A)[lastIndex]
+	*A = (*A)[:lastIndex-1]
+	MaxHeapify(*A, 0)
+	return maximum, nil
+}
+
+// page 176
+// xi is the index of the value to be substituted
+// k is the new value
+
+var ErrNewKeySmaller = errors.New("new key is smaller than current key")
+var ErrHeapOverflow = errors.New("heap overflow")
+
+func MaxHeapIncreaseKey(A heap, xi, k int) error {
+	if A[xi] > k {
+		return ErrNewKeySmaller
+	}
+	A[xi] = k
+	i := xi
+	for i > 0 && A[Parent(i)] < A[i] {
+		A[Parent(i)], A[i] = A[i], A[Parent(i)]
+		i = Parent(i)
+	}
+	return nil
+}
+
+// xi is the index
+func MaxHeapInsert(A *heap, xv int) {
+	k := xv
+	xv = math.MinInt
+	*A = append(*A, xv)
+	xi := len(*A) - 1
+	// err will never occur
+	_ = MaxHeapIncreaseKey(*A, xi, k)
+
 }
